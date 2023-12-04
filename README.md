@@ -129,9 +129,6 @@ and much much more...
 - `UNIQUE`
 - `PRIMARY KEY`
 - `REFERENCES [TABLE_WITH_PRIMARY_KEY].[PRIMARY_KEY_COLUMN]` => foriegn key
--
-
----
 
 ### Deleting Databases or Tables
 
@@ -169,3 +166,19 @@ ORDER BY column1, column2
 ```
 
 When ordering by multiple columns. 1st column will be considered for sorting, if there are multiple equal values in the first column. Second column will be considered, if 1st & 2nd columns' values are equal, 3rd column will be considered for sorting, and so on...
+
+### Insert Values to Table
+
+```sql
+-- Connect to DB first \c db_name => Then use the following command
+
+INSERT INTO table_name (
+    c1_name,
+    c2_name,
+    c3_name,
+)
+VALUES (c1_value, c2_value, c3_value);
+```
+
+- **NOTE THAT** SQL is very sensitive to quotes (double quotes causes problems, use single quotes)
+- When dealing with dates in SQL, write `DATE` followed up with the date in a single quotes in this format only 'yyyy-mm-dd'
