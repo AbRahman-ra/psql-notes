@@ -181,4 +181,84 @@ VALUES (c1_value, c2_value, c3_value);
 ```
 
 - **NOTE THAT** SQL is very sensitive to quotes (double quotes causes problems, use single quotes)
-- When dealing with dates in SQL, write `DATE` followed up with the date in a single quotes in this format only 'yyyy-mm-dd'
+- When dealing with dates in SQL, write `DATE` followed up with the date in a single quotes in this format only 'yyyy-mm-dd'. In `id` selection. Only double quotes work for me `id is a BIGSERIAL`.
+
+---
+
+### Querying Data
+
+```sql
+SELECT column1, column2, column3, ...
+FROM table_name
+WHERE (condition)
+ORDER BY column1, column2, ...;
+```
+
+The condition is very similar to the if statements in programming. You can use logical operators `AND`, `OR`, `NOT`. Or even arithmetic operators (`=`, `<`, `>`, `<=`, `>=`, `<>`)
+
+Note that "Not Equal" in SQL is `<>` and NOT `!=` or `~=` like other programming languages
+
+You can use multiple conditions. You can use some reserved keywords like `NULL`. See the following query below:
+
+```sql
+SELECT first_name, last_name, date_of_birth, gender
+FROM best_table
+WHERE (gender = 'Female' OR gender = 'Male') AND email IS NULL
+ORDER BY first_name, last_name;
+```
+
+If you want to select/count unqiue values only. We use
+
+```sql
+SELECT DISTINCT column1, column2
+FROM 'table'
+```
+
+You can check the truth of a condition using `SELECT` command
+
+```sql
+SELECT 1 = 1; --true
+SELECT 1 > 3; --false
+SELECT 2 > 'Hi' --error
+```
+
+---
+
+### Data Filteration
+
+You can view `n` rows using `LIMIT n`. You can specify the starting point using `OFFSET x`.
+
+```sql
+SELECT first_name, last_name, date_of_birth, gender
+FROM best_table
+OFFSET 5 LIMIT 10 --start counting from the 5th item
+```
+
+You can use `FETCH` which does the same as `LIMIT`
+
+```sql
+SELECT first_name, last_name, date_of_birth, gender
+FROM best_table
+OFFSET 5 FETCH FIRST 10 ROWS ONLY;
+```
+
+The difference is `FETCH` is a SQL standard
+
+To filter data using conditions, you can use `IN` keyword. Which is better than writing multiple `OR`s.
+
+```SQL
+SELECT "id", first_name, last_name, date_of_birth, gender
+FROM best_table
+WHERE gender IN ('Male', 'Female') AND email IS NULL  -- very neat and easy now
+OFFSET 5 LIMIT 15;
+```
+
+To select data within a range. We use `BETWEEN` keyword
+
+```sql
+SELECT "id", first_name, last_name, date_of_birth, gender
+FROM best_table
+WHERE date_of_birth BETWEEN DATE '2000-01-01' AND DATE '2004-12-31'
+AND gender IN ('Male', 'Female')
+ORDER BY first_name, last_name;
+```
