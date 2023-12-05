@@ -262,3 +262,54 @@ WHERE date_of_birth BETWEEN DATE '2000-01-01' AND DATE '2004-12-31'
 AND gender IN ('Male', 'Female')
 ORDER BY first_name, last_name;
 ```
+
+---
+
+### More Data Filtration
+
+To match specific text patteer. We can user `LIKE` inside the `WHERE` condition. We follow `LIKE` with a text expression (similar to RegEx). Where `%` means any character of length 0 and more (similar to `\w*` in RegEx), and `_` means only 1 character (similar to `\w` in RegEx). You can use multiple underscores `___s` means 3 exact characters and followed by s.
+
+```sql
+SELECT "id", first_name, last_name, date_of_birth, gender
+FROM best_table
+WHERE date_of_birth BETWEEN DATE '2000-01-01' AND DATE '2004-12-31'
+AND email LIKE '%.com'
+AND first_name LIKE '%u_' -- The second to last letter is u
+AND gender IN ('Male', 'Female')
+ORDER BY first_name, last_name;
+```
+
+There is also `ILIKE` operator, which does the same exact as `LIKE` but it's case insensitive.
+
+---
+
+### Aggregate Functions & Grouping Data
+
+you can use aggregate functions in the `SELECT` statement. The aggregate functions are
+
+- `COUNT(column)`
+- `AVG(column)`
+- `MAX(column)`
+- `MIN(column)`
+- `SUM(column)`
+
+to find the count of each gender in our data
+
+```sql
+SELECT COUNT("id"), gender
+FROM best_table
+WHERE gender = 'Male' OR gender = 'Female' -- There are other genders in the database
+GROUP BY gender
+```
+
+**Note That** `GROUP BY` MUST be before `ORDER BY`
+
+You can filter `GROUP BY` by adding `HAVING`. `HAVING` is a `WHERE` condition that can be added ONLY to aggregate functions
+
+```sql
+SELECT COUNT("id"), gender
+FROM best_table
+WHERE gender = 'Male' OR gender = 'Female' -- There are other genders in the database
+GROUP BY gender
+HAVING COUNT("id") > 200 -- show counts of gender that have only more than 200 people
+```
