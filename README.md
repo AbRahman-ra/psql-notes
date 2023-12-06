@@ -39,14 +39,14 @@ sudo apt install pgadmin4-web
 switch to psql user view
 
 ```bash
-sudo -i -u [PSQL_USER (default = 'postgres')]
+sudo -i -u '<postgres_username (default:postgres)>'
 psql
 ```
 
 adjust the server credentials
 
 ```sql
-alter user PSQL_USER with password '[PSQL_PASSWORD]';
+alter user <postgres_username> with password '<psql_password>'
 ```
 
 ---
@@ -62,10 +62,22 @@ using pgAdmin4, enter host name `localhost`, password is the password you chose 
 using pgAdmin4 or using this command (never forget the `;` when dealing with SQL commands)
 
 ```sql
-sudo -i -u [POSTGRES_DATABSE_USER]
+sudo -i -u '<postgres_username>'
 psql
-CREATE DATABASE [db_name];
-\c [db_name]
+CREATE DATABASE '<db_name>';
+\c '<db_name>'
+```
+
+**A much better option to connect the database** is to navigate to the folder your sql files are in
+
+```bash
+cd 'path/to/working/directory'
+```
+
+Then, connect to the databse. Configure the connection inside the working directory
+
+```bash
+psql -h localhost -p '<port (default is 5432)>' -U '<postgres_username>' -d '<db_name>'
 ```
 
 To go back from table to psql user view
@@ -79,7 +91,7 @@ To connect again
 ```bash
 psql #Enter the psql user view
 # you can do anything here from psql user view, like creating DBs
-\c [db_name]
+\c '<db_name>'
 ```
 
 To create table
@@ -137,7 +149,7 @@ To delete a DB or a table inside the databse:
 1. Open the psql user view using the following command
 
 ```bash
-sudo -i -u [PSQL_USER]
+sudo -i -u [postgres_username]
 psql
 ```
 
