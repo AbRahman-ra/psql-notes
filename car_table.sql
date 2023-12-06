@@ -1,9 +1,9 @@
 create table car_table (
-	car_id SERIAL,
-	company VARCHAR(50),
-	model VARCHAR(50),
-	car_price MONEY,
-	model_year INT
+	car_id SERIAL NOT NULL PRImary KEY,
+	company VARCHAR(50) NOT NULL,
+	model VARCHAR(50) NOT NULL,
+	car_price MONEY NOT NULL,
+	model_year INT NOT NULL
 );
 insert into car_table (car_id, company, model, car_price, model_year) values (1, 'Infiniti', 'EX', '$95398.42', 2012);
 insert into car_table (car_id, company, model, car_price, model_year) values (2, 'Mazda', 'MX-5', '$28196.82', 2012);

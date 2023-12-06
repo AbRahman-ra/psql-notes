@@ -129,6 +129,24 @@ DON'T write them in a separate line, DON't end the last column with a comma
 - `UUID` => Uneversally Unique Identifier
 - `JSON`, `JSONB` => JSON formats
 - `MONEY` => currency
+- `NUMERIC(precision, scale)` => can take no arguments at all. Or can take 2 arguments (precision = max total number of the digits, scale, total number of digits after the decimal place) => `NUMERIC(8,2) => 123456.78`
+
+If we want to create a stype from a fixed list, for example (male or female, can't accept anything other than these two). So, welcome to enumerated types (enums)!
+
+To create an enum in PostgreSQL. We create them as a type first, then assign the type into the columns.
+
+```sql
+CREATE TYPE gender AS ENUM ("male", "female");
+-- creating a dummy database for twitter
+CREATE DATABASE twitter;
+
+CREATE TABLE users (
+    user_id VARCHAR(20) UNIQUE NOT NULL PRIMARY KEY,
+    user_name VARCHAR(50) NOT NULL,
+    user_gender gender --user gender column is of type gender
+    -- and much more columns
+);
+```
 
 and much much more...
 
@@ -324,4 +342,76 @@ FROM best_table
 WHERE gender = 'Male' OR gender = 'Female' -- There are other genders in the database
 GROUP BY gender
 HAVING COUNT("id") > 200 -- show counts of gender that have only more than 200 people
+```
+
+Another Advanced example, where we want to found the min, average, max price for each car company. Displaying the number of cars each company has
+
+```sql
+-- company, #cars, min, avg, max, sum
+SELECT
+	company,
+	COUNT(model) AS no_of_cars,
+	/* Since car_price is money type, it will
+	throw erros if we run the aggregate functions
+	directky, we will cast them to numbers using
+	the ::NUMERIC operator
+	*/
+	ROUND(MIN(car_price::NUMERIC)) AS min_price,
+	ROUND(AVG(car_price::NUMERIC)) AS avg_price,
+	ROUND(MAX(car_price::NUMERIC)) AS max_price,
+	ROUND(SUM(car_price::NUMERIC)) AS total_sales
+    /* We can not use ROUND and enter data
+    to NUMERIC(p,s) isntead. But this may not be super
+    good (found some prices like this 11788.000000000)
+    */
+FROM car_table
+GROUP BY company
+ORDER BY avg_price
+```
+
+---
+
+### Arithmetic Operatos in SQL
+
+- `+-`: addition and subtraction
+- `*/`: multiplication and division
+- `%`: modulus
+- `^`: power
+- `!` factorial
+
+---
+
+### Operations on columns
+
+Consider that the following companies reduced their prices 20%
+
+- Hyundai
+- Ford
+- Mitsubishi
+- Lexus
+- Mazda
+
+Let's find the discounted price using SQL, we will refuce the min, max & avg for simplicity for now
+
+```sql
+SELECT
+    company,
+    COUNT(model),
+    ROUND(MIN(car_price::NUMERIC)) AS min_original_price,
+    ROUND(MIN(car_price::NUMERIC)*0.8) AS min_discounted_price,
+    ROUND(AVG(car_price::NUMERIC)) AS avg_original_price,
+    ROUND(AVG(car_price::NUMERIC)*0.8) AS avg_discounted_price,
+    ROUND(MAX(car_price::NUMERIC)) AS max_original_price,
+    ROUND(MAX(car_price::NUMERIC)*0.8) AS max_discounted_price
+FROM car_table
+WHERE company IN ('Hyundai', 'Ford', 'Mitsubishi', 'Lexus', 'Mazda')
+-- in IN(), we use single quotes. Double quotes make problems
+GROUP BY company
+ORDER BY min_discounted_price;
+```
+
+You might see in the above query the word `AS`. It's for aliasing. Simply renaming the column. If I didn't rename them. THey will be shoun in their original names (the ones used in `CREATE TABLE`), or they will be renamed to the aggregate function used with them
+
+```sql
+SELECT ROUND(AVG(car_price::NUMERIC)) -- => column name = round
 ```
