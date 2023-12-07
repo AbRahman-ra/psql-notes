@@ -415,3 +415,82 @@ You might see in the above query the word `AS`. It's for aliasing. Simply renami
 ```sql
 SELECT ROUND(AVG(car_price::NUMERIC)) -- => column name = round
 ```
+
+---
+
+### Dealing with nullities in SQL
+
+We use `COALESCE` to handle nulls inside a column. It's written inside the `SELECT` statement, and takes 2+ arguments.
+
+`COALESCE(column, default value if the value in the column is null, 2nd default value if the 1st defualt is null)`
+
+```sql
+SELECT first_name, COALESCE(email, '0') -- all null emails will be replaced with 0
+FROM best_table
+```
+
+Another important nullity control is the `NULLIF` operator in the `SELECT` statement. It takes 2 expressions. It returns null if the 2 expressions are equal. Otherwise it returns the first expression
+
+```sql
+SELECT NULLIF(0, COALESCE(email, 0))
+/* Replace null emails with zero.
+If the email is 0 replace it with NULL. It's stupid I know,
+but I didn't find insightful examples
+*/
+FROM best_table
+```
+
+---
+
+### Date & Time in PostgreSQL
+
+Similar to JavaScript & TypeScript having a date function
+
+```ts
+let now = Date.now();
+```
+
+We can do the same in PostgreSQL
+
+```sql
+SELECT NOW()
+-- "2023-12-07 07:26:31.453289+03" => "yyyy-mm-dd hh:mm:ss.ms"
+```
+
+To cast it to only date or only time
+
+```sql
+SELECT NOW()::DATE; -- "2023-12-07"
+SELECT NOW()::TIME; -- "07:26:31.453289+03"
+/* Don't write multiple queries in the same query tool in pgAdmin 4,
+only the last one will run
+*/
+```
+
+**Adding and subtracting dates**
+
+To add and subtract dates. We can user `INTERVAL`. Assume you want to find the date 20 years, 3 months and 9 days before/after now
+
+```sql
+SELECT (date_of_birth + INTERVAL '20 YEARS 3 MONTHS 9 DAYS')::DATE AS new_date
+-- use `-` to find dates before, `+` to find dates after
+FROM best_table
+```
+
+To extract specific values such as year, month or day. We use `EXTRACT` operator. Its syntax is
+
+```sql
+EXTRACT(CENTURY/YEAR/MONTH/DAY/HOUR/MINUTE/SECOND FROM date_or_time)
+```
+
+**Note that** when extracting days. They will be ordered from 0 (Sunday) till 6 (Saturday)
+
+Let's get it work
+
+```sql
+SELECT
+    date_of_birth,
+    (date_of_birth + INTERVAL '15 YEARS 4 MONTHS 13 DAYS')::DATE AS new_date,
+EXTRACT(YEAR FROM date_of_birth + INTERVAL'15 YEARS') AS new_year
+FROM best_table
+```
