@@ -119,8 +119,8 @@ Connect to a databse fist. Then, to create table. Use the following query
 
 ```sql
 CREATE TABLE [table_name] (
-    column_name [data_type] CONSTRAINTS,
-    column_name [data_type] CONSTRAINTS );
+  column_name [data_type] CONSTRAINTS,
+  column_name [data_type] CONSTRAINTS );
 
 -- last column will have the closing bracket with the semi colon
 -- DON'T write them in a separate line, DON't end the last column with a comma
@@ -165,10 +165,10 @@ CREATE TYPE gender AS ENUM ("male", "female");
 CREATE DATABASE twitter;
 
 CREATE TABLE users (
-    user_id VARCHAR(20) UNIQUE NOT NULL PRIMARY KEY,
-    user_name VARCHAR(50) NOT NULL,
-    user_gender gender --user gender column is of type gender
-    -- and much more columns
+  user_id VARCHAR(20) UNIQUE NOT NULL PRIMARY KEY,
+  user_name VARCHAR(50) NOT NULL,
+  user_gender gender --user gender column is of type gender
+  -- and much more columns
 );
 ```
 
@@ -240,10 +240,11 @@ ORDER BY column1, column2 DESC;
 
 ```sql
 INSERT INTO table_name (
-    -- If you're using command line, make sure you connect to the database
-    c1_name,
-    c2_name,
-    c3_name,
+  -- If you're using command line, make sure you connect to the database
+  c1_name,
+  c2_name,
+  c3_name,
+  ...
 )
 VALUES (c1_value, c2_value, c3_value);
 ```
@@ -392,21 +393,21 @@ Another Advanced example, where we want to found the min, average, max price for
 ```sql
 -- company, #cars, min, avg, max, sum
 SELECT
-	company,
-	COUNT(model) AS no_of_cars,
-	/* Since car_price is money type, it will
-	throw erros if we run the aggregate functions
-	directky, we will cast them to numbers using
-	the ::NUMERIC operator
-	*/
-	ROUND(MIN(car_price::NUMERIC)) AS min_price,
-	ROUND(AVG(car_price::NUMERIC)) AS avg_price,
-	ROUND(MAX(car_price::NUMERIC)) AS max_price,
-	ROUND(SUM(car_price::NUMERIC)) AS total_sales
-    /* We can not use ROUND and enter data
-    to NUMERIC(p,s) isntead. But this may not be super
-    good (found some prices like this 11788.000000000)
-    */
+  company,
+  COUNT(model) AS no_of_cars,
+  /* Since car_price is money type, it will
+  throw erros if we run the aggregate functions
+  directky, we will cast them to numbers using
+  the ::NUMERIC operator
+  */
+  ROUND(MIN(car_price::NUMERIC)) AS min_price,
+  ROUND(AVG(car_price::NUMERIC)) AS avg_price,
+  ROUND(MAX(car_price::NUMERIC)) AS max_price,
+  ROUND(SUM(car_price::NUMERIC)) AS total_sales
+  /* We can not use ROUND and enter data
+  to NUMERIC(p,s) isntead. But this may not be super
+  good (found some prices like this 11788.000000000)
+  */
 FROM car_table
 GROUP BY company
 ORDER BY avg_price
@@ -436,14 +437,14 @@ Let's find the discounted price using SQL, we will refuce the min, max & avg for
 
 ```sql
 SELECT
-    company,
-    COUNT(model),
-    ROUND(MIN(car_price::NUMERIC)) AS min_original_price,
-    ROUND(MIN(car_price::NUMERIC)*0.8) AS min_discounted_price,
-    ROUND(AVG(car_price::NUMERIC)) AS avg_original_price,
-    ROUND(AVG(car_price::NUMERIC)*0.8) AS avg_discounted_price,
-    ROUND(MAX(car_price::NUMERIC)) AS max_original_price,
-    ROUND(MAX(car_price::NUMERIC)*0.8) AS max_discounted_price
+  company,
+  COUNT(model),
+  ROUND(MIN(car_price::NUMERIC)) AS min_original_price,
+  ROUND(MIN(car_price::NUMERIC)*0.8) AS min_discounted_price,
+  ROUND(AVG(car_price::NUMERIC)) AS avg_original_price,
+  ROUND(AVG(car_price::NUMERIC)*0.8) AS avg_discounted_price,
+  ROUND(MAX(car_price::NUMERIC)) AS max_original_price,
+  ROUND(MAX(car_price::NUMERIC)*0.8) AS max_discounted_price
 FROM car_table
 WHERE company IN ('Hyundai', 'Ford', 'Mitsubishi', 'Lexus', 'Mazda')
 -- in IN(), we use single quotes. Double quotes make problems
@@ -544,10 +545,10 @@ We can find the duration between two dates using the `AGE` function. The `AGE` f
 
 ```sql
 SELECT first_name,
-	last_name,
-	AGE(NOW(), date_of_birth) AS age,
-    EXTRACT(YEAR FROM AGE(NOW(), date_of_birth)) AS age_years,
-	EXTRACT(MONTH FROM AGE(NOW(), date_of_birth)) AS age_months
+  last_name,
+  AGE(NOW(), date_of_birth) AS age,
+  EXTRACT(YEAR FROM AGE(NOW(), date_of_birth)) AS age_years,
+  EXTRACT(MONTH FROM AGE(NOW(), date_of_birth)) AS age_months
 FROM best_table
 ORDER BY age ASC;
   /* We can write the code without EXTRACT but it will show age in years, months, days
@@ -560,3 +561,93 @@ ORDER BY age ASC;
 ---
 
 ## Primary Keys
+
+- Primary keys is a unique identifier for a record in a table
+- Primary key can be a column or more in a table, but the table can't have multiple primary keys
+  - For example, name & email can be 1 priamry key (the email can duplicate, the name can duplicate, but a specific name and email can't occur together more than once)
+
+To add primary keys in the query, we either use the `PRIMARY KEY` operator when creating table. Or after creating the table we use this command
+
+```sql
+ALTER TABLE <table_name> ADD PRIMARY KEY(column1, column2, ...)
+```
+
+To add primary key when creating table for multiple columns
+
+```sql
+CREATE TABLE my_table(
+  user_id BIGSERIAL NOT NULL,
+  username VARCHAR(15) NOT NULL,
+  email VARCAHR(50) NOT NULL
+  PRIMARY KEY(user_id, username)
+);
+```
+
+### Uniquness
+
+- Primary keys are unique, but we can have unique values taht are not primary keys
+- Emails are not a unique identifier (primary key), because they are nullable. But if they are not null, they must be unique
+
+### Adding Constraints After Creating Tables
+
+We talked about constraints like `UNQIUE`, `NOT NULL` and others above. But how to add a constraint to a created table? We simply use this query
+
+```sql
+ALTER TABLE my_table ADD CONSTRAINT optional_constraint_name UNIQUE(columns_name, ...)
+```
+
+- We can define a constraint name, or let postgres define it by default. This also applies for primary key
+
+To remove constraints or key, we simply replace `ADD` with `DROP`
+
+```sql
+ALTER TABLE my_table DROP CONSTRAINT constraint_name
+```
+
+Let's use the check constraint
+
+```sql
+ALTER TABLE my_table ADD CONSTRAINT CHECK(gender = 'Male' OR gender = 'Female')
+```
+
+---
+
+## CRUD Operations in SQL Records
+
+CRUD stands for Create, Read, Update & Delete. To Create a record
+
+- We use the `INSERT` keyword as we mentioned above
+
+```sql
+INSERT INTO table_name (
+-- If you're using command line, make sure you connect to the database
+c1_name,
+c2_name,
+c3_name,
+...
+)
+VALUES (c1_value, c2_value, c3_value);
+
+```
+
+- To access/read records, we use the `SELECT` statement
+- To update records, we use the `UPDATE... SET` statement
+
+```sql
+UPDATE table_name
+SET
+  column1 = value1,
+  column2 = value2,
+  ...
+WHERE condition;
+```
+
+- Finally, to delete a record. We use `DELETE` operator
+
+```sql
+DELETE
+FROM table_name
+WHERE condition
+```
+
+The `WHERE` in updating and deleting is very important to prevent affecting all the records. It's a good practice to delete by primary key.
