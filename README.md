@@ -2,17 +2,19 @@
 
 ## [Course Link](https://youtu.be/qw--VYLpxG4)
 
-## Notes
+---
 
-### Getting Started
+## Getting Started
 
-Install PostgreSQL & pgAdmin4 using the following script (For Debian - MX Linux XFCE)
+**Note that the installation for Windows & MAC users is mentioned in the course. You can access it from the official documentations for PostgreSQL & pgAdmin4. I will explain the installation for the linux users here**
+
+1. Install PostgreSQL & pgAdmin4 using the following script (For Debian)
 
 ```bash
 apt install postgresql
 ```
 
-Then install pgAdmin using the following scipt
+2. Then install pgAdmin using the following scipt
 
 ```bash
 # Setup the repository
@@ -36,14 +38,14 @@ sudo apt install pgadmin4-desktop
 sudo apt install pgadmin4-web
 ```
 
-switch to psql user view
+3. Switch to psql user view
 
 ```bash
 sudo -i -u '<postgres_username (default:postgres)>'
 psql
 ```
 
-adjust the server credentials
+4. Adjust the server credentials
 
 ```sql
 alter user <postgres_username> with password '<psql_password>'
@@ -51,20 +53,33 @@ alter user <postgres_username> with password '<psql_password>'
 
 ---
 
-### Create a server
+## Creating Your First Server
 
-using pgAdmin4, enter host name `localhost`, password is the password you chose for the above command
+using pgAdmin4:
+
+1. Expand the "Servers" dropdown
+2. Right click and choose Register -> Server
+3. Name your server
+4. Go to "Connection" tab and enter host name `localhost`, password is the password you chose for the above command (Adjusting server credentials)
+5. Confirm
 
 ---
 
-### Create & connect to DB
+## Creating & Connecting to Your First DB
 
 using pgAdmin4 or using this command (never forget the `;` when dealing with SQL commands)
 
-```sql
+```bash
+# 1. Change the user to the postgreSQL user
 sudo -i -u '<postgres_username>'
+
+# 2. Enter psql
 psql
+
+# 3. Create the db
 CREATE DATABASE '<db_name>';
+
+# 4. Connect to the database
 \c '<db_name>'
 ```
 
@@ -80,7 +95,7 @@ Then, connect to the databse. Configure the connection inside the working direct
 psql -h localhost -p '<port (default is 5432)>' -U '<postgres_username>' -d '<db_name>'
 ```
 
-To go back from table to psql user view
+To go back from table to psql user view in the terminal window
 
 ```bash
 \q
@@ -94,22 +109,26 @@ psql #Enter the psql user view
 \c '<db_name>'
 ```
 
-To create table
+---
+
+## Creating Your First Table in a Database
+
+**For SQL queries, you can use th Query Tool in pgAdmin4, just expand the "Databses" dropdown, then right click and choose "Query Tool". Here, you'll be able to deal with pgAdmin4 and not the command line terminal**
+
+Connect to a databse fist. Then, to create table. Use the following query
 
 ```sql
-/* after connecting to db, write the following: */
 CREATE TABLE [table_name] (
     column_name [data_type] CONSTRAINTS,
     column_name [data_type] CONSTRAINTS );
-/*
-last column will have the closing bracket with the semi colon
-DON'T write them in a separate line, DON't end the last column with a comma
-*/
+
+-- last column will have the closing bracket with the semi colon
+-- DON'T write them in a separate line, DON't end the last column with a comma
 ```
 
 ---
 
-### Data Types in PostgreSQL
+## Data Types in PostgreSQL
 
 [Refer to The Documentation](https://www.postgresql.org/docs/current/datatype.html)
 
@@ -129,11 +148,16 @@ DON'T write them in a separate line, DON't end the last column with a comma
 - `UUID` => Uneversally Unique Identifier
 - `JSON`, `JSONB` => JSON formats
 - `MONEY` => currency
-- `NUMERIC(precision, scale)` => can take no arguments at all. Or can take 2 arguments (precision = max total number of the digits, scale, total number of digits after the decimal place) => `NUMERIC(8,2) => 123456.78`
+- `ENUM(values)` => enums
+  - The enums are a type from a fixed list, for example (male or female, can't accept anything other than these two). It stands for enumerated types
+- `NUMERIC(precision, scale)` => Numeric Values
+  - can take no arguments at all. Or can take 2 arguments (precision = max total number of the digits, scale, total number of digits after the decimal place) => `NUMERIC(8,2) => 123456.78`
 
-If we want to create a stype from a fixed list, for example (male or female, can't accept anything other than these two). So, welcome to enumerated types (enums)!
+and much much more...
 
-To create an enum in PostgreSQL. We create them as a type first, then assign the type into the columns.
+### Enums Creation (Special Case)
+
+Unlike other data types, to create an enum in PostgreSQL. We create them as a type first, then assign the type into the table columns.
 
 ```sql
 CREATE TYPE gender AS ENUM ("male", "female");
@@ -148,19 +172,19 @@ CREATE TABLE users (
 );
 ```
 
-and much much more...
-
 ---
 
-### Constraints in PostgreSQL
+## Constraints in PostgreSQL
 
 - `CHECK [condition]` => checks the following colums satsfies certain condition
 - `NOT NULL` => can't be null
 - `UNIQUE`
 - `PRIMARY KEY`
-- `REFERENCES [TABLE_WITH_PRIMARY_KEY].[PRIMARY_KEY_COLUMN]` => foriegn key
+- `FOREIGN KEY REFERENCES [TABLE_WITH_PRIMARY_KEY].[PRIMARY_KEY_COLUMN]` => foreign key
 
-### Deleting Databases or Tables
+---
+
+## Deleting Databases or Tables
 
 To delete a DB or a table inside the databse:
 
@@ -191,18 +215,32 @@ DROP TABLE [TABLE_NAME];
 
 Or you can use `pgAdmin` Which will make you like 10000000000% easier.
 
+---
+
+## Sorting Columns
+
+When sorting columns in PostgreSQL, we use the keyword `ORDER BY` after selecting the columns and defining the tables. It's a good practice to write the `ORDER BY` as the last statement in your query.
+
 ```sql
-ORDER BY column1, column2
+SELECT column1, column2, column3
+FROM my_table
+ORDER BY column1, column2 DESC;
 ```
 
-When ordering by multiple columns. 1st column will be considered for sorting, if there are multiple equal values in the first column. Second column will be considered, if 1st & 2nd columns' values are equal, 3rd column will be considered for sorting, and so on...
+- When ordering by multiple columns.
+  - 1st column will be considered for sorting
+  - If there are multiple equal values in the first column. Second column will be considered.
+  - If 1st & 2nd columns' values are equal, 3rd column will be considered for sorting, and so on...
+- The sorting order is ascending by default
+- You can write `ASC` at the end of your `ORDER BY` statement to confirm ascending order, and `DESC` to change the order to descending order
 
-### Insert Values to Table
+---
+
+## Insert Values to Table
 
 ```sql
--- Connect to DB first \c db_name => Then use the following command
-
 INSERT INTO table_name (
+    -- If you're using command line, make sure you connect to the database
     c1_name,
     c2_name,
     c3_name,
@@ -211,11 +249,12 @@ VALUES (c1_value, c2_value, c3_value);
 ```
 
 - **NOTE THAT** SQL is very sensitive to quotes (double quotes causes problems, use single quotes)
-- When dealing with dates in SQL, write `DATE` followed up with the date in a single quotes in this format only 'yyyy-mm-dd'. In `id` selection. Only double quotes work for me `id is a BIGSERIAL`.
+- When dealing with dates in SQL, write `DATE` followed up with the date in a single quotes in this format only 'yyyy-mm-dd'
+- In creating and selecting a column named `id` selection. Put it inside double quotes `id is a BIGSERIAL`. This is because `id` is a reserved word in SQL
 
 ---
 
-### Querying Data
+## Querying Data
 
 ```sql
 SELECT column1, column2, column3, ...
@@ -224,24 +263,24 @@ WHERE (condition)
 ORDER BY column1, column2, ...;
 ```
 
-The condition is very similar to the if statements in programming. You can use logical operators `AND`, `OR`, `NOT`. Or even arithmetic operators (`=`, `<`, `>`, `<=`, `>=`, `<>`)
-
-Note that "Not Equal" in SQL is `<>` and NOT `!=` or `~=` like other programming languages
-
-You can use multiple conditions. You can use some reserved keywords like `NULL`. See the following query below:
+- The condition is very similar to the if statements in programming
+- You can use logical operators `AND`, `OR`, `NOT`. Or even arithmetic operators (`=`, `<`, `>`, `<=`, `>=`, `<>`)
+  - Note that "Not Equal" in SQL is `<>` and NOT `!=` or `~=` like other programming languages
+  - In MySQL, `!=` is a valid Syntax for `<>`
+- You can use multiple conditions. You can use some reserved keywords like `NULL`. See the following query below:
 
 ```sql
 SELECT first_name, last_name, date_of_birth, gender
 FROM best_table
-WHERE (gender = 'Female' OR gender = 'Male') AND email IS NULL
+WHERE (gender = 'Female' OR gender = 'Male') AND email IS NULL -- You can write IS NOT NULL for the opposite
 ORDER BY first_name, last_name;
 ```
 
-If you want to select/count unqiue values only. We use
+If you want to select/count unqiue values only. We use `DISTINCT` keyword
 
 ```sql
 SELECT DISTINCT column1, column2
-FROM 'table'
+FROM table_name
 ```
 
 You can check the truth of a condition using `SELECT` command
@@ -254,7 +293,9 @@ SELECT 2 > 'Hi' --error
 
 ---
 
-### Data Filteration
+## Data Filteration
+
+### Limiting & Offsetting Data
 
 You can view `n` rows using `LIMIT n`. You can specify the starting point using `OFFSET x`.
 
@@ -274,7 +315,9 @@ OFFSET 5 FETCH FIRST 10 ROWS ONLY;
 
 The difference is `FETCH` is a SQL standard
 
-To filter data using conditions, you can use `IN` keyword. Which is better than writing multiple `OR`s.
+### Bringing Data with Any of these Values/Conditions
+
+To filter data that satisfies any of the values/conditions, you can use `IN` keyword. Which is better than writing multiple `OR`s.
 
 ```SQL
 SELECT "id", first_name, last_name, date_of_birth, gender
@@ -282,6 +325,8 @@ FROM best_table
 WHERE gender IN ('Male', 'Female') AND email IS NULL  -- very neat and easy now
 OFFSET 5 LIMIT 15;
 ```
+
+### Bringing Data Within Certain Range of Values
 
 To select data within a range. We use `BETWEEN` keyword
 
@@ -293,9 +338,7 @@ AND gender IN ('Male', 'Female')
 ORDER BY first_name, last_name;
 ```
 
----
-
-### More Data Filtration
+### Matching Strings
 
 To match specific text patteer. We can user `LIKE` inside the `WHERE` condition. We follow `LIKE` with a text expression (similar to RegEx). Where `%` means any character of length 0 and more (similar to `\w*` in RegEx), and `_` means only 1 character (similar to `\w` in RegEx). You can use multiple underscores `___s` means 3 exact characters and followed by s.
 
@@ -313,9 +356,9 @@ There is also `ILIKE` operator, which does the same exact as `LIKE` but it's cas
 
 ---
 
-### Aggregate Functions & Grouping Data
+## Aggregate Functions & Grouping Data
 
-you can use aggregate functions in the `SELECT` statement. The aggregate functions are
+You can use aggregate functions in the `SELECT` statement. The aggregate functions are
 
 - `COUNT(column)`
 - `AVG(column)`
@@ -334,7 +377,7 @@ GROUP BY gender
 
 **Note That** `GROUP BY` MUST be before `ORDER BY`
 
-You can filter `GROUP BY` by adding `HAVING`. `HAVING` is a `WHERE` condition that can be added ONLY to aggregate functions
+You can filter `GROUP BY` by adding `HAVING`. `HAVING` is a `WHERE` condition that can be added ONLY to aggregate functions, since they don't have `WHERE` statement
 
 ```sql
 SELECT COUNT("id"), gender
@@ -371,15 +414,13 @@ ORDER BY avg_price
 
 ---
 
-### Arithmetic Operatos in SQL
+## Arithmetic Operatos in SQL
 
 - `+-`: addition and subtraction
 - `*/`: multiplication and division
 - `%`: modulus
 - `^`: power
 - `!` factorial
-
----
 
 ### Operations on columns
 
@@ -410,7 +451,7 @@ GROUP BY company
 ORDER BY min_discounted_price;
 ```
 
-You might see in the above query the word `AS`. It's for aliasing. Simply renaming the column. If I didn't rename them. THey will be shoun in their original names (the ones used in `CREATE TABLE`), or they will be renamed to the aggregate function used with them
+You might see in the above query the word `AS`. It's for aliasing. Simply renaming the column. If I didn't rename them. THey will be shoun in their original names (the ones used in `CREATE TABLE`), or they will be renamed to the aggregate function used with them. Also, you might see the `::NUMERIC`, we do this to cast/convert `MONEY` type into a number. Since we can't do arithmetic operations and use aggregate functions on `MONEY`
 
 ```sql
 SELECT ROUND(AVG(car_price::NUMERIC)) -- => column name = round
@@ -418,11 +459,11 @@ SELECT ROUND(AVG(car_price::NUMERIC)) -- => column name = round
 
 ---
 
-### Dealing with nullities in SQL
+## Dealing With Nullities in SQL
 
-We use `COALESCE` to handle nulls inside a column. It's written inside the `SELECT` statement, and takes 2+ arguments.
+We use `COALESCE` to handle nulls inside a column. It's written inside the `SELECT` statement, and takes at least 2 arguments.
 
-`COALESCE(column, default value if the value in the column is null, 2nd default value if the 1st defualt is null)`
+`COALESCE(column, default value if the value in the column is null, 2nd default value if the 1st defualt is null, ...)`
 
 ```sql
 SELECT first_name, COALESCE(email, '0') -- all null emails will be replaced with 0
@@ -442,7 +483,7 @@ FROM best_table
 
 ---
 
-### Date & Time in PostgreSQL
+## Date & Time in PostgreSQL
 
 Similar to JavaScript & TypeScript having a date function
 
@@ -467,7 +508,7 @@ only the last one will run
 */
 ```
 
-**Adding and subtracting dates**
+### Adding and Subtracting Intervals to Dates
 
 To add and subtract dates. We can user `INTERVAL`. Assume you want to find the date 20 years, 3 months and 9 days before/after now
 
@@ -476,6 +517,8 @@ SELECT (date_of_birth + INTERVAL '20 YEARS 3 MONTHS 9 DAYS')::DATE AS new_date
 -- use `-` to find dates before, `+` to find dates after
 FROM best_table
 ```
+
+### Extract Date Fields
 
 To extract specific values such as year, month or day. We use `EXTRACT` operator. Its syntax is
 
@@ -489,8 +532,31 @@ Let's get it work
 
 ```sql
 SELECT
-    date_of_birth,
-    (date_of_birth + INTERVAL '15 YEARS 4 MONTHS 13 DAYS')::DATE AS new_date,
+  date_of_birth,
+  (date_of_birth + INTERVAL '15 YEARS 4 MONTHS 13 DAYS')::DATE AS new_date,
 EXTRACT(YEAR FROM date_of_birth + INTERVAL'15 YEARS') AS new_year
 FROM best_table
 ```
+
+### Finding Intervals & Durations
+
+We can find the duration between two dates using the `AGE` function. The `AGE` function takes 2 arguments
+
+```sql
+SELECT first_name,
+	last_name,
+	AGE(NOW(), date_of_birth) AS age,
+    EXTRACT(YEAR FROM AGE(NOW(), date_of_birth)) AS age_years,
+	EXTRACT(MONTH FROM AGE(NOW(), date_of_birth)) AS age_months
+FROM best_table
+ORDER BY age ASC;
+  /* We can write the code without EXTRACT but it will show age in years, months, days
+   and time counted from midnight */
+
+  /*In MySQL, we can group age with year and months by using
+  EXTRACT(YEAR_MONTH FROM AGE(...)) but it's not supported in postgres unfortunately*/
+```
+
+---
+
+## Primary Keys
