@@ -651,3 +651,169 @@ WHERE condition
 ```
 
 The `WHERE` in updating and deleting is very important to prevent affecting all the records. It's a good practice to delete by primary key.
+
+---
+
+## Conflict Handling
+
+Suppose you want to add a new record with a primary key that exists
+
+```sql
+INSERT INTO best_table (
+	"id",
+	first_name,
+	last_name,
+	gender,
+	email,
+	date_of_birth,
+	country
+)
+VALUES (
+	911,
+	'f_n',
+	'l_n',
+	'Female',
+	'e@ma.il',
+	DATE '2000-09-21',
+	'Finland'
+);
+```
+
+You'll get a duplicate key error since the id 911 is the primary key and it already exists in `best_table`. To handle such a case. We add a new handler `ON CONFLICT(c1,c2,...[optional input]) DO NOTHING`
+
+```sql
+INSERT INTO best_table (
+	"id",
+	first_name,
+	last_name,
+	gender,
+	email,
+	date_of_birth,
+	country
+)
+VALUES (
+	911,
+	'f_n',
+	'l_n',
+	'Female',
+	'e@ma.il',
+	DATE '2000-09-21',
+	'Finland'
+)
+ON CONFLICT DO NOTHING;
+-- INSERT 0 0 => no insert happen
+```
+
+You may wish to update the record with the new record. Here, we introduce new keyword `EXCLUDED.<column_name>`
+
+Assume we want to update the first name, last name and email for the above example
+
+```sql
+INSERT INTO best_table (
+	"id",
+	first_name,
+	last_name,
+	gender,
+	email,
+	date_of_birth,
+	country
+)
+VALUES (
+	911,
+	'f_n',
+	'l_n',
+	'Female',
+	'e@ma.il',
+	DATE '2000-09-21',
+	'Finland'
+)
+ON CONFLICT(id) DO UPDATE SET -- No parantheses
+  first_name = EXCLUDED.first_name,
+  last_name = EXCLUDED.last_name,
+  email = EXCLUDED.email
+-- INSERT 0 1
+```
+
+Note that the input is completely optional in `ON CONFLICT DO NOTHING`. While it's mandatory in `ON CONFLICT(column) DO UPDATE`
+
+Updating on conflict is also referred to as upserting
+
+---
+
+## Foreign Keys, Relations & Joins
+
+Assume we have 2 tables
+
+1. Users
+
+- user_id
+- user_name
+- user_email
+- user_phone
+
+2. Cars
+
+- car_id
+- car_make
+- car_model
+
+Now, before we display both tables at once. We need to define what's the relation between them
+
+- A person can have only one car, and the car belongs only to one person (one-to-one relationship)
+- A person can have multiple cars, and each car belongs to only one person (one-to-many relationship)
+- A person can have multiple cars, and each car can be used by multiple people (many-to-many relationship)
+
+Here, you might think that why don't we merge the 2 columns and thank you that's it. but this is a bad design as it's resourceful (takes much memory), it also doesn't refer which car for which person.
+
+To make the best joins or displaying both tables at once, we use the forign keys. This in other words, means, we add an extra column in the first table which is a primary key in the second table. This column is called Foreign Key. The purpose for foreign keys is to refrence tables and link them together
+
+### Differences between foreign key and other table's primary key
+
+Assume we want to create a table called Cars, that will have a one-to-one relationship with the table Users
+
+```sql
+CREATE TABLE Cars (
+  car_id BIGSERIAL NOT NULL PRIMARY KEY,
+  car_make VARCHAR(50) NOT NULL,
+  car_model VARCHAR(50) NOT NULL,
+  car_price NUMERIC(10,2) NOT NULL
+);
+```
+
+Now, to link the car with the `Users` table. We must understand that the foreign key's constraints is only defined in the table where it's a primary key. In other words, we will add `car_id` as a foreign key in `Users` table. But all the constraints related to this id should be defined only in `Cars` table. Let's implement
+
+```sql
+CREATE TABLE Users (
+  "id" BIGSERIAL NOT NULL PRIMARY KEY,
+	first_name VARCHAR(50) NOT NULL,
+	last_name VARCHAR(50) NOT NULL,
+	gender VARCHAR(20) NOT NULL,
+	email VARCHAR(50),
+	date_of_birth DATE NOT NULL,
+	country VARCHAR(50) NOT NULL,
+  car_id BIGINT REFERENCES Cars(car_id) UNIQUE
+)
+```
+
+Let's consider the last line a bit. Look that we didn't put `NOT NULL`, that's because tere might be a person who doesn't have a car. Also, we defined the data type as a `BIGINT` and not a `BIGSERIAL`. That's because `BIGSERIAL` means that the value will be incremented. That's true but the incrementation will take place in the `Cars` table not in the `Users` one. The `BIGINT` will make sure to grab the same data type from the table but without incrementing inaside ther `Users` table as we mentioned. Finally, the `UNQIUE` constraint is just a double check for the values, it's a safety valve.
+
+It's important to note that the `Users` table is depending on the `Cars` table by referencing to it, and not the opposite. So, when writing the executable query, we make sure that the `Cars` table is created first. Otherwise, there will be no references in the `Users` table and we will get an error.
+
+### Start making relations!
+
+Now, let's link tables before joining them
+
+```sql
+UPDATE <table_with_foreign_key>
+SET <foreign_key_column> = <foreign_key_value>
+WHERE <primary_key_column> = <primary_key_value>
+```
+
+Let's put into action, remember that the `Users` table has a foreign key `car_id`, which is a primary key in `Cars` table
+
+```sql
+UPDATE Users
+SET car_id = 1
+WHERE user_id = 3
+-- user with user_id = 3 is now having the car with car_id = 1
+```
