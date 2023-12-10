@@ -817,3 +817,5 @@ SET car_id = 1
 WHERE user_id = 3
 -- user with user_id = 3 is now having the car with car_id = 1
 ```
+
+---
