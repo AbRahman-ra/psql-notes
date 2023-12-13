@@ -563,6 +563,7 @@ ORDER BY age ASC;
 ## Primary Keys
 
 - Primary keys is a unique identifier for a record in a table
+  - In databases, we refer to table rows as records, and table columns as fields. We will use this terminology a lot
 - Primary key can be a column or more in a table, but the table can't have multiple primary keys
   - For example, name & email can be 1 priamry key (the email can duplicate, the name can duplicate, but a specific name and email can't occur together more than once)
 
@@ -821,3 +822,80 @@ WHERE user_id = 3
 ---
 
 ## Joins
+
+### Inner Joins
+
+Consider the same two tables `Users` (which is the same as `best_table`) and `Cars` (which is the same as `car_table`). Now, assume we want to extract all data for only the people who have cars (i.e. people that share the same key(s) in both tables). The key can be foreign in both tables, or primary at one table and foreign in other table. To extract the records that have keys in both tables. We use `INNER JOIN`
+
+The syntax is simple `INNER JOIN second_table ON first_table.key = second.table = key`. Now, let's get it work
+
+```sql
+SELECT
+  first_name,
+  last_name,
+  best_table.car_id,
+  company,
+  model
+  /*company and model are from "car_table" but we don't
+  mention it in "FROM", They will be retrieved by join */
+FROM best_table
+INNER JOIN car_table ON best_table.car_id = car_table.car_id
+```
+
+### Left & Right Joins
+
+Inner joins merge & display only records that have keys in both tables. Left joins focus on displaying and merging all the records from the first table. If there is a common key between the tables, they will appear as normal. Otherwise, the values will be null.
+
+To demonstrate, assume we have 2 tables
+
+```
+table 1
+--------|--------
+name    | car_id
+--------|--------
+Rashed  | 3
+--------|--------
+Lubna   | 5
+
+
+======
+
+
+table 2
+--------|--------
+car_id  | model
+--------|--------
+1       | Sunny
+--------|--------
+3       | Accent
+```
+
+The left join will show all records from table 1, and common records from table 2. Everything else will be null
+
+```
+left join table
+--------|---------|--------
+name    | car_id  | model
+--------|---------|--------
+Rashed  | 3       | Accent
+--------|---------|--------
+Lubna   | 5       | NULL
+```
+
+Note that table 1 appears as it is, but table 2 only shows the records of common cars only (`car_id = 3`), that's why the `car_id = 1` is not shown (because it's not common between 2 tables). While the `car_id = 5` is `NULL` because it's not in the second table
+
+The right join is very similar to the left join, the only difference is that the second table and the first table are swapped. The second table appears as it is, the first table only appears the common records. In simple words, the following 2 queries are equivalent
+
+```sql
+-- QUERY 1
+SELECT first_name, last_name, best_table.car_id, company, model
+FROM best_table
+RIGHT JOIN car_table ON best_table.car_id = car_table.car_id
+
+-- QUERY 2
+SELECT first_name, last_name, best_table.car_id, company, model
+FROM car_table
+LEFT JOIN best_table ON best_table.car_id = car_table.car_id
+```
+
+Note that the tables name are changed in the `FROM` statement
