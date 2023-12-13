@@ -827,13 +827,24 @@ WHERE user_id = 3
 
 Consider the same two tables `Users` (which is the same as `best_table`) and `Cars` (which is the same as `car_table`). Now, assume we want to extract all data for only the people who have cars (i.e. people that share the same key(s) in both tables). The key can be foreign in both tables, or primary at one table and foreign in other table. To extract the records that have keys in both tables. We use `INNER JOIN`
 
-The syntax is simple `INNER JOIN second_table ON first_table.key = second.table = key`. Now, let's get it work
+The syntax is simple `INNER JOIN second_table ON first_table.key = second.table.key`. Also, in the `FROM` statement, we don't mentiion the second table. A general syntax will be something like this
+
+```sql
+SELECT first_table_columns, second_table_columns
+FROM first_table
+INNER JOIN second_table ON first_table.key = second_table.key
+```
+
+Another important information is that the joining must occur before the `WHERE` condition;
+
+Now, let's get it work
 
 ```sql
 SELECT
   first_name,
   last_name,
   best_table.car_id,
+  -- if not specifying table will throw error because column name is same in both
   company,
   model
   /*company and model are from "car_table" but we don't
@@ -842,11 +853,7 @@ FROM best_table
 INNER JOIN car_table ON best_table.car_id = car_table.car_id
 ```
 
-### Left & Right Joins
-
-Inner joins merge & display only records that have keys in both tables. Left joins focus on displaying and merging all the records from the first table. If there is a common key between the tables, they will appear as normal. Otherwise, the values will be null.
-
-To demonstrate, assume we have 2 tables
+To demonstrate it in another example, assume we have 2 tables
 
 ```
 table 1
@@ -870,7 +877,23 @@ car_id  | model
 3       | Accent
 ```
 
-The left join will show all records from table 1, and common records from table 2. Everything else will be null
+The `INNER JOIN` will show rows with common keys only
+
+```
+inner join table
+--------|---------|--------
+name    | car_id  | model
+--------|---------|--------
+Rashed  | 3       | Accent
+```
+
+Note that car_id = 1 didn't appear because there is no name associated with it. The same thing occus with Lubna since there is no car_id = 5. We will use the same example for other joining types
+
+### Left & Right Joins
+
+Inner joins merge & display only records that have keys in both tables. Left joins focus on displaying and merging all the records from the first table. If there is a common key between the tables, they will appear as normal. Otherwise, the values will be null.
+
+The left join will show all records from table 1, and common records from table 2. Everything else will be null. Let's apply it for the same tables above
 
 ```
 left join table
@@ -898,4 +921,45 @@ FROM car_table
 LEFT JOIN best_table ON best_table.car_id = car_table.car_id
 ```
 
-Note that the tables name are changed in the `FROM` statement
+Note that the tables name are changed in the `FROM` statement. Let's apply it again to the same tables above to make sure we understand it correctly
+
+```
+right join table
+--------|---------|--------
+name    | car_id  | model
+--------|---------|--------
+NULL    | 1       | Sunny
+--------|---------|--------
+Rashed  | 3       | Accent
+```
+
+The last type of joining is the `FULL OUTER JOIN`. In this type, all records from both tables will appear no matter what. Let's apply it again to the same tables
+
+```
+full outer join table
+--------|---------|--------
+name    | car_id  | model
+--------|---------|--------
+NULL    | 1       | Sunny
+--------|---------|--------
+Rashed  | 3       | Accent
+--------|---------|--------
+Lubna   | 5       | NULL
+```
+
+We can consider the `FULL OUTER JOIN` as a unioin of the left and right joins
+
+## Deleting Records That Are Foreign Keys In Other Tables
+
+Assume we want to delete the `car_id = 3` that's owned by Rashed. When trying to delete such a record. You'll face an error because the car id is used in other table. To do this, you should first assign the foreign key (`car_id` in the first table) to null or something else, then safely delete the `car_id` from the second table. You can even delete the whole record from the first table but it's not a good practice.
+
+## Storing Query Data as a CSV File
+
+From the psql terminal, you can use the following command
+
+```sql
+\copy (<SQL_Command>) TO 'path/to/file/name.csv' DELIMITER ',' CSV HEADER;
+-- Delimiter in CSV is alwaye ",". Header means the table will include columns' names
+```
+
+Or you can click on the download icon in pgAdmin 4 that will make your life easier. I added a sample file in the attachments
