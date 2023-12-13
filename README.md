@@ -819,3 +819,5 @@ WHERE user_id = 3
 ```
 
 ---
+
+## Joins
