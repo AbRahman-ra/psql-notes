@@ -1146,8 +1146,8 @@ create table car_table (
 	car_price MONEY NOT NULL,
 	model_year INT NOT NULL
 );
-insert into car_table (car_uuid, company, model, car_price, model_year) values (uuid_geenrate_v4(), 'Infiniti', 'EX', '$95398.42', 2012);
-insert into car_table (car_uuid, company, model, car_price, model_year) values (uuid_geenrate_v4(), 'Mazda', 'MX-5', '$28196.82', 2012);
+insert into car_table (car_uuid, company, model, car_price, model_year) values (uuid_generate_v4(), 'Infiniti', 'EX', '$95398.42', 2012);
+insert into car_table (car_uuid, company, model, car_price, model_year) values (uuid_generate_v4(), 'Mazda', 'MX-5', '$28196.82', 2012);
 
 --------------------------------------------
 
