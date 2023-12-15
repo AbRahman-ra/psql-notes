@@ -452,7 +452,7 @@ GROUP BY company
 ORDER BY min_discounted_price;
 ```
 
-You might see in the above query the word `AS`. It's for aliasing. Simply renaming the column. If I didn't rename them. THey will be shoun in their original names (the ones used in `CREATE TABLE`), or they will be renamed to the aggregate function used with them. Also, you might see the `::NUMERIC`, we do this to cast/convert `MONEY` type into a number. Since we can't do arithmetic operations and use aggregate functions on `MONEY`
+You might see in the above query the word `AS`. It's for aliasing. Simply renaming the column. If I didn't rename them. They will be shoun in their original names (the ones used in `CREATE TABLE`), or they will be renamed to the aggregate function used with them. Also, you might see the `::NUMERIC`, we do this to cast/convert `MONEY` type into a number. Since we can't do arithmetic operations and use aggregate functions on `MONEY`
 
 ```sql
 SELECT ROUND(AVG(car_price::NUMERIC)) -- => column name = round
@@ -835,6 +835,8 @@ FROM first_table
 INNER JOIN second_table ON first_table.key = second_table.key
 ```
 
+If the keys have the same name, we can use `USING(key_name)`
+
 Another important information is that the joining must occur before the `WHERE` condition;
 
 Now, let's get it work
@@ -963,3 +965,204 @@ From the psql terminal, you can use the following command
 ```
 
 Or you can click on the download icon in pgAdmin 4 that will make your life easier. I added a sample file in the attachments
+
+---
+
+## Serials & Sequences
+
+We were defining our ids as a bigserial type. The `BIGSERIAL` is the same as a `BIGINT` (and by the way: `BIGINT` is the same as `INT8`) but it's auto incrementing. We can access more about the squence information by following these steps:
+
+1. Enter the `psql` mode using either the command line, or by right click on the database name from `pgAdmin` and choosling `psql tool`
+2. [If you're using the command line only] connect ot database, if you're using pgAdmin, skip this step
+3. Visualize the tablles by entering the following command
+
+```bash
+\d
+```
+
+After this tep, you'll find every table duplicated twice, one as the original table and one as a sequence
+
+```
+List of relations
+ Schema |         Name         |   Type   |  Owner
+--------+----------------------+----------+----------
+ public | best_table           | table    | postgres
+ public | best_table_id_seq    | sequence | postgres
+ public | car_table            | table    | postgres
+ public | car_table_car_id_seq | sequence | postgres
+(4 rows)
+```
+
+Now, let's try to explore the sequence tables
+
+```sql
+SELECT * FROM best_table_id_seq
+```
+
+You can use either the psql tool, the query tool or even the command line for the above command
+
+You'll find 3 columns (`last_value`, `log_cnt` & `is_called`). The last value is the last value the id has created. The `log_cnt` is the number of `ids` chched. In postgerSQL, some values are cached for the next value retrieval, it's 32 by default. When `nextval` fucntion is called (`nextval is explained later in this section`). This count will decrease until 0, then it will take 32 and decrease again. I will explain that later on.
+
+The `is_called` is whether the sequence is ever called (`t`) or not (`f`).
+
+In our case, if you inserted the table like me using the `best_table.sql` file. You'll get the `last_value = 1`, `log_cnt = 0` & `is_called = 'f'`. This is because we defined all the `id`s ourselves, we didn't let the sequence generate ids for us. It's important to understand that the `last_value` & `log_cnt` are not necessarily a true reflection of the table length
+
+Let's go into any [normal] table and explore it
+
+```bash
+\d best_table
+```
+
+The output will be something like this
+
+```
+                                      Table "public.best_table"
+    Column     |          Type          | Collation | Nullable |                Default
+---------------+------------------------+-----------+----------+----------------------------------------
+ id            | bigint                 |           | not null | nextval('best_table_id_seq'::regclass)
+ first_name    | character varying(50)  |           | not null |
+ last_name     | character varying(50)  |           | not null |
+ email         | character varying(100) |           |          |
+ gender        | character varying(15)  |           | not null |
+ country       | character varying(50)  |           | not null |
+ date_of_birth | date                   |           | not null |
+ car_id        | bigint                 |           |          |
+Indexes:
+    "best_table_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "best_table_car_id_fkey" FOREIGN KEY (car_id) REFERENCES car_table(car_id)
+```
+
+You find that at the `id`, there is a default value `nextval('best_table_id_seq'::regclass)`. Let's use it
+
+```sql
+SELECT nextval('best_table_id_seq'::regclass);
+-- We will get 1
+-- If we run again, we will get 2, then 3, and so on...
+```
+
+Here, it's important to discuss what happened. We used `SELECT nextval('sequence_table_name')`, we can cast it to type `regclass` optionally. The `nextval` function will output the next value of the sequence, each time you run it it will increment. A similar function to it is the `currval` that will return the curernt value in a sequence. The `currval` doesn't increment like the `nextval`. To understand the `log_cnt` and how it's affected by `nextval`. See [this question on Stack Overflow](https://stackoverflow.com/questions/66456952/what-does-log-cnt-mean-in-the-postgres-sequence)
+
+```sql
+SELECT nextval('best_table_id_seq');
+-- We will get 2
+
+SELECT currval('best_table_id_seq');
+-- We will get 2 also
+```
+
+If you want to get the last value without advancing the sequence, use `lastval` function, it takes no input. You can optionally specify the table, but since the sequence is in one relation, it will output the sequence for the whole database.
+
+```sql
+SELECT lastval();
+```
+
+The context of sequences will be more cleared by inserting records into our tables
+
+```sql
+INSERT INTO best_table
+(first_name, last_name, gender, country, date_of_birth)
+VALUES ('f_n', 'l_n', 'Male', 'Egypt', DATE '2000-10-02')
+```
+
+We will get an error because the `currval` is around 5 or 6, it will be a `duplicate key` error. To adjust the sequence value to the latest column, we will use another function `setval`. The syntax is similar.
+
+```sql
+SELECT setval('best_table_id_seq', (
+  -- Find the maximum ID in your table
+  SELECT max("id")
+  FROM best_table
+  )
+);
+```
+
+We can instead use `ALTER SEQUENCE` to restart the sequence count,
+
+```sql
+SELECT "id"
+FROM best_table
+ORDER by "id" DESC
+LIMIT 1
+-- get the number of last id, in our case it's 1000
+
+ALTER SEQUENCE best_table_id_seq RESTART WITH 1000;
+```
+
+Then, we insert our values as normal
+
+---
+
+## PostgreSQL Extensions
+
+PostgreSQL as an open-source database has extensions, to have access to each extension with its brief, we write the followign command
+
+```sql
+SELECT * FROM pg_available_extensions;
+```
+
+To install an extension, we run the `CREATE EXTENSION` statement
+
+```sql
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
+```
+
+To gain access to functions provided by extensions, we run this command in the `psql` view
+
+```bash
+\df
+```
+
+We got
+
+```
+                                List of functions
+ Schema |        Name        | Result data type |    Argument data types    | Type
+--------+--------------------+------------------+---------------------------+------
+ public | uuid_generate_v1   | uuid             |                           | func
+ public | uuid_generate_v1mc | uuid             |                           | func
+ public | uuid_generate_v3   | uuid             | namespace uuid, name text | func
+ public | uuid_generate_v4   | uuid             |                           | func
+ public | uuid_generate_v5   | uuid             | namespace uuid, name text | func
+ public | uuid_nil           | uuid             |                           | func
+ public | uuid_ns_dns        | uuid             |                           | func
+ public | uuid_ns_oid        | uuid             |                           | func
+ public | uuid_ns_url        | uuid             |                           | func
+ public | uuid_ns_x500       | uuid             |                           | func
+(10 rows)
+```
+
+## UUID
+
+UUID is Universally Unique ID, which is an id that's completely unique in the whole world. There are versions of UUID, we will be interested in UUIDv4 (random id). UUIDs are good to use as primary keys as they are secure and ensuring no collsiions during migrations to other databases.
+
+When creating a table with UUID, we specify the primary key with UUID type, then we explicitly set the value to equal the function `uuid_generate_v4()`. Some functions like `uuid_generate_v5` requires arguments so we enter them, but our function doesn't require any imputs. **Check the UUID folder, it has the UUID version of the table creation sql files**
+
+```sql
+-- CARS TABLE
+create table car_table (
+	car_uuid UUID NOT NULL PRIMARY KEY,
+	company VARCHAR(50) NOT NULL,
+	model VARCHAR(50) NOT NULL,
+	car_price MONEY NOT NULL,
+	model_year INT NOT NULL
+);
+insert into car_table (car_uuid, company, model, car_price, model_year) values (uuid_geenrate_v4(), 'Infiniti', 'EX', '$95398.42', 2012);
+insert into car_table (car_uuid, company, model, car_price, model_year) values (uuid_geenrate_v4(), 'Mazda', 'MX-5', '$28196.82', 2012);
+
+--------------------------------------------
+
+-- USERS TABLE
+create table best_table (
+	user_uuid UUID NOT NULL PRIMARY KEY,
+	first_name VARCHAR(50) NOT NULL,
+	last_name VARCHAR(50) NOT NULL,
+	email VARCHAR(100),
+	gender CHAR(20) NOT NULL,
+	country VARCHAR(50) NOT NULL,
+	date_of_birth DATE NOT NULL,
+	car_uuid REFERENCES car_table.car_uuid UNIQUE
+);
+
+INSERT INTO best_table (user_uuid, first_name, last_name, email, gender, country, date_of_birth) VALUES (uuid_generate_v4(), 'Lilyan', 'Marlow', 'lmarlow0@forbes.com', 'Female', 'Philippines', '2002-06-17');
+INSERT INTO best_table (user_uuid, first_name, last_name, email, gender, country, date_of_birth) VALUES (uuid_generate_v4(), 'Chaunce', 'Nancarrow', 'cnancarrow1@godaddy.com', 'Male', 'Thailand', '1973-12-03');
+```
